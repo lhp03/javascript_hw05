@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import {User, Article} from "./db.mjs"
 
 // assumes that User was registered in `./db.mjs`
-const User = mongoose.model("User");
 
 const startAuthenticatedSession = (req, user, cb) => {
   // TODO: implement startAuthenticatedSession
@@ -21,51 +21,58 @@ const register = (
 ) => {
   // TODO: implement register
   if (username.length < 8 || password.length < 8) {
-    errorCallback({
-      message: "USERNAME PASSWORD TOO SHORT",
-    });
-    return;
-  }
-
-  const User = mongoose.model("User");
-
-  User.find(username, (err, result) => {
-    if (err) {
-      console.log(err);
-    } else {
-      if (result > 0) {
-        errorCallback({ message: "USERNAME ALREADY EXISTS", });
-        return;
+    errorCallback(new Error("USERNAME PASSWORD TOO SHORT"));
+  } else {
+    User.find({"username" : username}, (err, result) => {
+      if (err) {
+        console.log(err);
       } else {
-        bcrypt.hash(password, saltRounds, (err, hash) => {
-          if (err) {
-            errorCallback({ message: "DOCUMENT SAVE ERROR" });
-            return;
-          } else {
-            const newUser = new User({
-              username: username,
-              email: email,
-              password: hash,
-            });
-
-            newUser.save((err) => {
-              if (err) {
-                errorCallback({ message: "DOCUMENT SAVE ERROR" });
-                return;
-              } else {
-                successCallback(newUser);
-                return;
-              }
-            });
-          }
-        });
+        if (result.length > 0) {
+          errorCallback(new Error("USERNAME ALREADY EXISTS"));
+        } else {
+          bcrypt.hash(password, 10, (err, hash) => {
+            if (err) {
+              errorCallback(new Error("DOCUMENT SAVE ERROR"));
+            } else {
+              const newUser = new User({
+                "username": username,
+                "email": email,
+                "password": hash,
+              });
+  
+              newUser.save((err) => {
+                if (err) {
+                  errorCallback(new Error("DOCUMENT SAVE ERROR"));
+                  return;
+                } else {
+                  successCallback(newUser);
+                  return;
+                }
+              });
+            }
+          });
+        }
       }
-    }
-  });
+    });
+  }
 };
 
 const login = (username, password, errorCallback, successCallback) => {
-  // TODO: implement login
+  User.findOne({"username": username}, (err, user) => {
+    if(!err && user) {
+      bcrypt.compare(password, user.password, (err, passwordMatch) => {
+        if(passwordMatch) {
+          successCallback(user);
+        } else {
+          errorCallback(new Error("PASSWORDS DO NOT MATCH"));
+        }
+      })
+
+    } else if(err & !user) {
+      errorCallback(new Error("USER NOT FOUND"))
+      console.log(err);
+    } 
+  }) 
 };
 
 // creates middleware that redirects to login if path is included in authRequiredPaths
