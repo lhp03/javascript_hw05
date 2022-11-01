@@ -20,12 +20,6 @@ mockImport("mongoose", {
   connect() {},
 });
 
-/*
-const auth = await reImport(
-  "c:\\Users\\LHP\\Desktop\\Assign\\homework05-main\\src\\auth.mjs"
-);
-*/
-
 const auth = await reImport("../src/auth.mjs");
 
 function failOnError(done, err) {

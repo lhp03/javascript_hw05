@@ -27,10 +27,4 @@ ArticleSchema.plugin(mongooseSlugPlugin, { tmpl: "<%=title%>" });
 
 const User = mongoose.model("User", UserSchema);
 const Article = mongoose.model("Article", ArticleSchema);
-
-mongoose.connect("mongodb://localhost/hw05").then((res) => console.log("Connected")).catch((err) => console.log(err));
-
-export {
-  User,
-  Article
-}
+mongoose.connect("mongodb://localhost/hw05");

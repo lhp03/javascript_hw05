@@ -1,11 +1,18 @@
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
-import {User, Article} from "./db.mjs"
 
 // assumes that User was registered in `./db.mjs`
 
+
 const startAuthenticatedSession = (req, user, cb) => {
-  // TODO: implement startAuthenticatedSession
+  req.session.regenerate((err) => {
+    if(!err) {
+      req.session.user = user;
+    } else {
+      console.log(err);
+      cb(err);
+    }
+  })
 };
 
 const endAuthenticatedSession = (req, cb) => {
@@ -23,6 +30,7 @@ const register = (
   if (username.length < 8 || password.length < 8) {
     errorCallback(new Error("USERNAME PASSWORD TOO SHORT"));
   } else {
+    const User = mongoose.model("User");
     User.find({"username" : username}, (err, result) => {
       if (err) {
         console.log(err);
@@ -58,17 +66,18 @@ const register = (
 };
 
 const login = (username, password, errorCallback, successCallback) => {
+  const User = mongoose.model("User");
   User.findOne({"username": username}, (err, user) => {
     if(!err && user) {
       bcrypt.compare(password, user.password, (err, passwordMatch) => {
-        if(passwordMatch) {
+        if(passwordMatch == true) {
           successCallback(user);
         } else {
           errorCallback(new Error("PASSWORDS DO NOT MATCH"));
         }
       })
 
-    } else if(err & !user) {
+    } else{
       errorCallback(new Error("USER NOT FOUND"))
       console.log(err);
     } 

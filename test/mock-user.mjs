@@ -19,7 +19,7 @@ class User {
 // break up username into save and count values
 User.parseName = function(username) {
   const s = '{' + username + '}';
-  // console.log('parsing', s);
+  console.log('parsing', s);
   return JSON.parse(s);
 };
 
